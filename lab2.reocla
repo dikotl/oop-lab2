@@ -1,0 +1,123 @@
+"../std/lists.reocla" import
+"../std/strings.reocla" import
+
+[(s)
+    (*
+     * Split string by newlines.
+     *)
+    $s ['\n' =] split-by
+    (*
+     * We have list of something like "1 2 3".
+     * Split by writespace.
+     *)
+    [[' ' =] split-by [trim] map] map
+    (*
+     * Map each number to integer.
+     *)
+    [[int] map] map
+] 'str-to-matrix proc
+
+[0 @ len] 'matrix-width proc
+
+[len] 'matrix-height proc
+
+[(m1 m2)
+    $m1 matrix-width  (w1)
+    $m1 matrix-height (h1)
+    $m2 matrix-width  (w2)
+    $m2 matrix-height (h2)
+    [] (rows)
+
+    0 (r)
+    [$r $h1 <] [
+        0 (c)
+        $m1 $r @ (row1)
+        $m2 $r @ (row2)
+        [] (row)
+
+        [$c $w1 <] [
+            $m1 $r @ $c @
+            $m2 $r @ $c @
+            + (value)
+            $row $value -> (row)
+            $c inc (c)
+        ] while
+
+        $rows $row -> (rows)
+        $r inc (r)
+    ] while
+
+    $rows
+] 'matrix+ proc
+
+[(a b)
+    $a matrix-width  (cols-a)
+    $a matrix-height (rows-a)
+    $b matrix-width  (cols-b)
+    $b matrix-height (rows-b)
+    [] (rows)
+
+    0 (i)
+    [$i $rows-a <] [
+        $a $i @ (row1)
+        $b $i @ (row2)
+        [] (row)
+        0 (j)
+        [$j $cols-b <] [
+            0 (sum)
+            0 (k)
+            [$k $cols-a <] [
+                $sum
+                $a $i @ $j @
+                $b $i @ $j @
+                * + (sum)
+                $k inc (k)
+            ] while
+            $row $sum -> (row)
+            $j inc (j)
+        ] while
+        $rows $row -> (rows)
+        $i inc (i)
+    ] while
+
+    $rows
+] 'matrix* proc
+
+[(m)
+    $m 0 @ len 0 = (first-row-empty)
+    $m     len 0 = (matrix-empty)
+    [$matrix-empty $first-row-empty or] [[]] [
+        $m [head] map (first-column)
+        $m [tail] map (rest)
+        $rest matrix-transpose $first-column <-
+    ] if-else
+] 'matrix-transpose proc
+
+
+(*
+ * Examples
+ *)
+
+; Bind matrix value.
+[[1 2]
+ [3 4]
+ [5 6]]
+(m)
+
+; Parse matrix from multiline string.
+"1 2 3\n4 5 6\n7 8 9" str-to-matrix println drop
+
+; Print matrix width & height.
+"matrix width: " print
+$m matrix-width println
+"matrix height: " print
+$m matrix-height println
+
+; Add matrices.
+$m $m matrix+ println drop
+
+; Multiply matrix by transposed self.
+$m matrix-transpose $m matrix* println drop
+
+; Print transposed matrix.
+$m matrix-transpose println drop
